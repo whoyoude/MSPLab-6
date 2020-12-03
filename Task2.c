@@ -18,7 +18,6 @@ char path[4];
 uint8_t connect = 0; //If device is connect it becomes 1.
 uint8_t hid = 0; //If device belong to HID class, it becomes 1.
 uint8_t msc = 0; //If device belong to MSC class, it becomes 1.
-uint8_t hid_connect = 0;
 uint8_t printplz = 0;
 float cursorx =0;
 float cursory = 0;
@@ -50,9 +49,6 @@ int main(void){
 		if(hid == 1 && msc ==0){//HID class device is connected
 			while(hid){
 				USBH_Process(&husbh);
-				if(hid_connect){
-			       hid_connect = 0;
-				}
 			}
 		}
 	}
@@ -74,8 +70,6 @@ void USBH_HID_EventCallback(USBH_HandleTypeDef *phost){
 		HID_MOUSE_Info_TypeDef* info = USBH_HID_GetMouseInfo(phost);
 		x=info->x;
 		y=info->y;
-		//printf("\n\rx=%d y=%d",x,y);
-		//fflush(stdout);
 
 		cursorx+=0.1*x;
 		if(cursorx<1) cursorx=1;
@@ -85,12 +79,12 @@ void USBH_HID_EventCallback(USBH_HandleTypeDef *phost){
 		if(cursory>24) cursory=24;
 		printf("\033[%d;%dH",round(cursory),round(cursorx));
 		fflush(stdout);
-		if(info->buttons[0]){
-			printf("o");
+		if(info->buttons[0]){//Left-button detected
+			printf("o");//Print 'o' at current position
 			fflush(stdout);
 		}
-		if(info->buttons[1]){
-			printf("\033[2K");
+		if(info->buttons[1]){//Right-button detected
+			printf("\033[2K");//Delete row at the current row where cursor at
 			fflush(stdout);
 		}
 
@@ -142,7 +136,6 @@ void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id) {
 		if(phost->pActiveClass == USBH_HID_CLASS){//Detect HID class device
 			printf("HID device detected\r\n");
 			hid = 1;
-			hid_connect = 1;
 		}
 		break;
 
@@ -155,7 +148,6 @@ void USBH_UserProcess(USBH_HandleTypeDef *phost, uint8_t id) {
 
 	case HOST_USER_DISCONNECTION:
 		connect =0;
-		hid_connect = 0;
 		msc = 0;
 		hid = 0;
 		printplz =0;
